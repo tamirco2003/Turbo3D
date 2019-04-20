@@ -6,6 +6,31 @@ jumps
 
 DATASEG
 
+mainMenu db '+-------------------------------------+', 13, 10
+		 db '|                                     |', 13, 10
+		 db '|                                     |', 13, 10
+		 db '|                                     |', 13, 10
+		 db '|                                     |', 13, 10
+		 db '|   _____         _         _______   |', 13, 10
+		 db '|  |_   _|  _ _ _| |__  ___|__ /   \  |', 13, 10
+		 db '|    | || || |  _|  _ \/ _ \|_ \ |) | |', 13, 10
+		 db '|    |_| \_,_|_| |_.__/\___/___/___/  |', 13, 10
+		 db '|                                     |', 13, 10
+		 db '|                                     |', 13, 10
+		 db '|                                     |', 13, 10
+		 db '|               Turbo3D               |', 13, 10
+		 db '|                                     |', 13, 10
+		 db '|                                     |', 13, 10
+		 db '|                                     |', 13, 10
+		 db '| Go forwards: W        Turn right: D |', 13, 10
+		 db '|                                     |', 13, 10
+		 db '| Go backwards: S       Turn left: A  |', 13, 10
+		 db '|                                     |', 13, 10
+		 db '|              Quit: q                |', 13, 10
+		 db '|                                     |', 13, 10
+		 db '|     Press any key to continue!      |', 13, 10
+		 db '+-------------------------------------+', 13, 10, '$'
+
 midOfScreen dw 100 ; Middle of screen (height 200).
 
 ; The map of the game.
@@ -612,6 +637,21 @@ start:
 	mov ds, ax
 
 call initFPU
+call graphicMode
+
+mov dh, 0
+mov dl, 0
+mov bh, 0
+mov ah, 2
+int 10h
+
+mov dx, offset mainMenu
+mov ah, 9h
+int 21h
+
+call waitForChar
+
+
 mainGameLoop:
 	call graphicMode
 	mov [loopHelper], 0

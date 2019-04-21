@@ -1,2 +1,2 @@
 # Turbo3D
-A raycasting 3D renderer built in TASM.
+A 3D maze built in TASM, works using [raycasting](https://lodev.org/cgtutor/raycasting.html).

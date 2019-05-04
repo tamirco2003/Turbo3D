@@ -1,3 +1,11 @@
+; Turbo3D
+; A raycasting based 3D maze game built in TASM.
+
+; 	Using a top down 2d map and some math, it sends out rays from the player
+; position to the direction he is looking. When the ray hits a wall, the game
+; calculates the distance to the wall, and draws a column of pixels based on
+; the distance to the wall, it's type, and the direction the ray hit it from.
+
 IDEAL
 MODEL small
 STACK 100h
@@ -6,6 +14,7 @@ jumps
 
 DATASEG
 
+; The main menu string.
 mainMenu db '+-------------------------------------+', 13, 10
 		 db '|                                     |', 13, 10
 		 db '|               Turbo3D               |', 13, 10
@@ -31,6 +40,7 @@ mainMenu db '+-------------------------------------+', 13, 10
 		 db '|                                     |', 13, 10
 		 db '+-------------------------------------+', 13, 10, '$'
 
+; The next level menu string.
 nextLevelMenu db '+-------------------------------------+', 13, 10
 	 		  db '|                                     |', 13, 10
 		 	  db '|                                     |', 13, 10
@@ -56,6 +66,7 @@ nextLevelMenu db '+-------------------------------------+', 13, 10
 		 	  db '|                                     |', 13, 10
 		 	  db '+-------------------------------------+', 13, 10, '$'
 
+; The win menu string.
 winMenu db '+-------------------------------------+', 13, 10
 		db '|                                     |', 13, 10
 		db '|                                     |', 13, 10
@@ -81,11 +92,13 @@ winMenu db '+-------------------------------------+', 13, 10
 		db '|                                     |', 13, 10
 		db '+-------------------------------------+', 13, 10, '$'
 
-midOfScreen dw 100 ; Middle of screen (height 200).
+screenWidth dw 320 ; Width of the screen (in pixels).
+screenHeight dw 200 ; Height of the screen (in pixels).
+midOfScreen dw 100 ; Middle of screen (height 200 divided by 2).
+
 levelCount db 2 ; Number of levels (for checking if there are more levels).
 
-
-; Level 1 constants.
+; Level 1 map.
 level1 db 1,1,1,1,1,1,1,1,1,1,1
 	   db 1,0,0,0,0,0,0,0,0,0,1
 	   db 1,0,2,2,2,0,3,3,3,0,1
@@ -97,48 +110,15 @@ level1 db 1,1,1,1,1,1,1,1,1,1,1
 	   db 1,0,4,4,4,0,3,3,3,0,1
 	   db 1,0,4,0,0,0,0,0,0,0,1
 	   db 1,1,1,1,1,1,1,1,1,1,1
-level1X dd 1.0
-level1Y dd 3.0
-level1DirX dd 0.0
-level1DirY dd -1.0
-level1PlaneX dd -0.66
-level1PlaneY dd 0.0
-level1Width dw 11
+level1X dd 1.5 ; X of starting player position in level 1.
+level1Y dd 3.5 ; Y of starting player position in level 1.
+level1DirX dd 0.0 ; X of starting player direction in level 1.
+level1DirY dd -1.0 ; Y of starting player direction in level 1.
+level1PlaneX dd -0.66 ; X of starting camera plane in level 1.
+level1PlaneY dd 0.0 ; Y of starting camera plane in level 1.
+level1Width dw 11 ; Level 1 width (for calculating X and Y in 1D array).
 
-; Level 1 constants.
-;level1 db 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-;	   db 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
-;	   db 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
-;	   db 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
-;	   db 1,0,0,0,0,0,2,2,2,2,2,0,0,0,0,3,0,3,0,3,0,0,0,1
-;	   db 1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,1
-;	   db 1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,3,0,0,0,3,0,0,0,1
-;	   db 1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,1
-;	   db 1,0,0,0,0,0,2,2,0,2,2,0,0,0,0,3,0,3,0,3,0,0,0,1
-;	   db 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
-;	   db 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
-;	   db 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
-;	   db 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
-;	   db 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
-;	   db 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
-;	   db 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
-;	   db 1,4,4,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
-;	   db 1,4,0,4,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
-;	   db 1,4,0,0,0,0,5,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
-;	   db 1,4,0,4,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
-;	   db 1,4,0,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
-;	   db 1,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
-;	   db 1,4,4,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
-;	   db 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-;level1X dd 22.0
-;level1Y dd 12.0
-;level1DirX dd -1.0
-;level1DirY dd 0.0
-;level1PlaneX dd 0.0
-;level1PlaneY dd 0.66
-;level1Width dw 24
-
-; Level 2 constants.
+; Level 2 map.
 level2 db 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 	   db 1,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
 	   db 1,0,2,0,2,2,2,0,2,0,2,2,2,2,2,2,2,2,1
@@ -158,82 +138,70 @@ level2 db 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 	   db 1,0,2,2,2,0,2,0,2,2,2,2,2,0,2,0,2,0,1
 	   db 1,0,0,0,0,0,2,0,0,0,0,0,0,0,2,0,2,0,1
 	   db 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,1
-level2X dd 1.5
-level2Y dd 1.5
-level2DirX dd 0.0
-level2DirY dd 1.0
-level2PlaneX dd 0.66
-level2PlaneY dd 0.0
-level2Width dw 19
+level2X dd 1.5 ; X of starting player position in level 2.
+level2Y dd 1.5 ; Y of starting player position in level 2.
+level2DirX dd 0.0 ; X of starting player direction in level 2.
+level2DirY dd 1.0 ; Y of starting player direction in level 2.
+level2PlaneX dd 0.66 ; X of starting camera plane in level 2.
+level2PlaneY dd 0.0 ; Y of starting camera plane in level 2.
+level2Width dw 19 ; Level 2 width (for calculating X and Y in 1D array).
 
-; Current level variables.
-currentLevel db 1
-currentWidth dw 0
-levelAddress dw 0
+currentLevel db 1 ; Current level number.
+currentWidth dw 0 ; The current level's width.
+levelAddress dw 0 ; The current level's memory address.
 
 floatHelper dw 0 ; A variable to insert integers into the FPU.
 loopHelper dw 0 ; A variable to help with looping over the screen
 rotHelper dd 0.0 ; A variable to help with rotating the player.
 FPUHelper dw 0 ; A variable to help with changing the FPU control word.
-		
-; Player position.
-playerX dd 22.0
-playerY dd 12.0
 
-; Player direction.
-dirX dd -1.0
-dirY dd 0.0
+playerX dd 22.0 ; X of player position.
+playerY dd 12.0 ; Y of player position.
 
-; Camera plane (perpendicular to direction).
-planeX dd 0.0
-planeY dd 0.66
+dirX dd -1.0 ; X of player direction.
+dirY dd 0.0 ; Y of player direction.
 
-; X coordinate in camera plane (left = -1, middle = 0, right = 1).
-cameraX dd 0.0
+planeX dd 0.0 ; X of camera plane.
+planeY dd 0.66 ; Y of camera plane.
 
-; Direction of the ray used for drawing the environment.
-rayDirX dd 0.0
-rayDirY dd 0.0
+cameraX dd 0.0 ; X coordinate in camera plane (left = -1, middle = 0, right = 1).
 
-; Player position in grid.
-mapX dw 0
-mapY dw 0
+rayDirX dd 0.0 ; X of ray's direction.
+rayDirY dd 0.0 ; Y of ray's direction.
 
-; Distance from player position to next grid line on ray.
-sideDistX dd 0.0
-sideDistY dd 0.0
+mapX dw 0 ; X of player's position in the grid (rounded player position).
+mapY dw 0 ; Y of player's position in the grid (rounded player position).
 
-; Distance from grid line to next grid line on ray.
-deltaDistX dd 0.0
-deltaDistY dd 0.0
+sideDistX dd 0.0 ; Distance on ray from player position to first horizontal grid line.
+sideDistY dd 0.0 ; Distance on ray from player position to first vertical grid line.
 
-; Distance from camera plane to wall.
-perpWallDist dd 0.0
+deltaDistX dd 0.0 ; Distance on ray from one horizontal grid line to the next.
+deltaDistY dd 0.0 ; Distance on ray from one vertical grid line to the next.
 
-; What direction to move on each axis.
-stepX dw 0
-stepY dw 0
+perpWallDist dd 0.0 ; Distance from camera plane to wall.
+
+stepX dw 0 ; X direction for ray to step in.
+stepY dw 0 ; Y direction for ray to step in.
 
 movSpeed dd 0.1 ; Movement speed.
-; For checking if there is a wall in front of the player.
-movWallCheckX dw 0
-movWallCheckY dw 0
 
-; Sin and cos of rotation speed.
-rotSpeedSin dd 0.052336
-rotSpeedCos dd 0.99863
-negRotSpeedSin dd -0.052336
-negRotSpeedCos dd 0.99863
+movWallCheckX dw 0 ; X position of player, used for checking if there's a wall in the direction the player wants to move.
+movWallCheckY dw 0 ; Y position of player, used for checking if there's a wall in the direction the player wants to move.
+
+rotSpeedSin dd 0.052336 ; Sin of rotation speed.
+rotSpeedCos dd 0.99863 ; Cos of rotation speed.
+negRotSpeedSin dd -0.052336 ; Sin of negative rotation speed.
+negRotSpeedCos dd 0.99863 ; Cos of negative rotation speed.
 
 hit db 0 ; Was a wall hit?
 side db 0 ; What side did it hit? (For color calculation).
 
 ; Helper variables for drawing the walls.
-lineHeight dw 0
-lineStart dw 0
-lineEnd dw 0
-lineColor db 0
-lineLooper dw 0
+lineHeight dw 0 ; Height of line (calculated based on wall distance).
+lineStart dw 0 ; Pixel to start drawing the line on (calculated based on line height and the middle of the screen).
+lineEnd dw 0 ; Pixel to stop drawing the line on (calculated based on line height and the middle of the screen).
+lineColor db 0 ; Color of the line (based on the wall number and the side the ray hit it from).
+lineLooper dw 0 ; Variable used for looping one column of pixels.
 
 char db 0 ; What character was hit?
 
@@ -277,15 +245,14 @@ proc initFPU
 	ret
 endp initFPU
 
-; Calculates X coordinate in camera plane.
+; Calculates X coordinate in camera plane (2 * currentColumn / width - 1).
 proc calculateCameraX
 	pusha
 	mov [floatHelper], 2
 	fild [floatHelper]
 	fild [loopHelper]
 	fmul
-	mov [floatHelper], 320
-	fild [floatHelper]
+	fild [screenWidth]
 	fdiv
 	fld1
 	fsub
@@ -294,16 +261,18 @@ proc calculateCameraX
 	ret
 endp calculateCameraX
 
-; Calculates the ray's direction.
+; Calculates the ray's direction (playerDirection + cameraPlane * cameraX).
 proc calculateRay
 	pusha
+	; Calculate rayDirX with the formula dirX + planeX * cameraX.
 	fld [cameraX]
 	fld [planeX]
 	fmul
 	fld [dirX]
 	fadd
 	fstp [rayDirX]
-	
+
+	; Calculate rayDirY with the formula dirY + planeY * cameraX.
 	fld [cameraX]
 	fld [planeY]
 	fmul
@@ -314,27 +283,31 @@ proc calculateRay
 	ret
 endp calculateRay
 
-; Stores floored (rounded-down) player position in mapX and mapY.
+; Stores rounded player position in mapX and mapY.
 proc floorPlayerPos
 	pusha
+	; Round playerX and store in mapX.
 	fld [playerX]
 	fistp [mapX]
 	
+	; Round playerY and store in mapY.
 	fld [playerY]
 	fistp [mapY]
 	popa
 	ret
 endp floorPlayerPos
 
-; Calculates length of ray from one X to the next X.
+; Calculates distance on ray from one horizontal grid line to the next, then from one vertical grid line to the next (abs(1 / rayDir)).
 proc calculateGridDist
 	pusha
+	; Calculate deltaDistX with the formula abs(1 / rayDirX).
 	fld1
 	fld [rayDirX]
 	fdiv
 	fabs
 	fstp [deltaDistX]
 	
+	; Calculate deltaDistY with the formula abs(1 / rayDirY).
 	fld1
 	fld [rayDirY]
 	fdiv
@@ -344,9 +317,10 @@ proc calculateGridDist
 	ret
 endp calculateGridDist
 
-; Calculates direction and distance to step.
+; Calculates distance on ray from player to grid lines and the ray's step direction.
 proc calculateStep
 	pusha
+	; Compare rayDirX to 0, if above or equal, jump to right.
 	fld [rayDirX]
 	ftst
 	fstsw [floatHelper]
@@ -354,6 +328,7 @@ proc calculateStep
 	sahf
 	jae right
 	
+	; Because X direction is left, move -1 to stepX, and calculate sideDistX using the formula (playerX - mapX) * deltaDistX.
 	mov [stepX], -1
 	fld [playerX]
 	fild [mapX]
@@ -361,8 +336,9 @@ proc calculateStep
 	fld [deltaDistX]
 	fmul
 	fstp [sideDistX]
-	jmp y
+	jmp y ; Jump to Y direction check when done.
 	
+	; Because X direction is right, move 1 to stepX, and calculate sideDistX using the formula (mapX + 1.0 - playerX) * deltaDistX.
 	right:
 		mov [stepX], 1
 		fild [mapX]
@@ -375,6 +351,7 @@ proc calculateStep
 		fstp [sideDistX]
 	
 	y:
+		; Compare rayDirY to 0, if above or equal, jump to up.
 		fld [rayDirY]
 		ftst
 		fstsw [floatHelper]
@@ -382,6 +359,7 @@ proc calculateStep
 		sahf
 		jae up
 		
+		; Because Y direction is down, move -1 to stepY, and calculate sideDistY using the formula (playerY - mapY) * deltaDistY.
 		mov [stepY], -1
 		fld [playerY]
 		fild [mapY]
@@ -389,8 +367,9 @@ proc calculateStep
 		fld [deltaDistY]
 		fmul
 		fstp [sideDistY]
-		jmp calculateStepEnd
+		jmp calculateStepEnd ; Jump to end of procedure when done.
 		
+		; Because Y direction is up, move 1 to stepY, and calculate sideDistY using the formula (mapY + 1.0 - playerY) * deltaDistY.
 		up:
 			mov [stepY], 1
 			fild [mapY]
@@ -453,7 +432,7 @@ endp calculateWallDist
 ; Draws line on screen based on distance from wall.
 proc drawWall
 	pusha
-	; Calculate height of line.
+	; Calculate height of line based on distance.
 	mov [floatHelper], 200
 	fild [floatHelper]
 	fld [perpWallDist]

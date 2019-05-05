@@ -6,8 +6,6 @@
 ; calculates the distance to the wall, and draws a column of pixels based on
 ; the distance to the wall, it's type, and the direction the ray hit it from.
 
-; CHECK IF YOU NEED TO SET THE CURSOR POSITION FOR DRAWING THE MENUS, COULD BRING LINE COUNT DOWN.
-
 IDEAL
 MODEL small
 STACK 100h
@@ -98,7 +96,7 @@ screenWidth dw 320 ; Width of the screen (in pixels).
 screenHeight dw 200 ; Height of the screen (in pixels).
 midOfScreen dw 100 ; Middle of screen (height 200 divided by 2).
 
-levelCount db 2 ; Number of levels (for checking if there are more levels).
+levelCount db 3 ; Number of levels (for checking if there are more levels).
 
 ; Level 1 map.
 level1 db 1,1,1,1,1,1,1,1,1,1,1
@@ -121,32 +119,56 @@ level1PlaneY dd 0.0 ; Y of starting camera plane in level 1.
 level1Width dw 11 ; Level 1 width (for calculating X and Y in 1D array).
 
 ; Level 2 map.
-level2 db 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-	   db 1,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
-	   db 1,0,2,0,2,2,2,0,2,0,2,2,2,2,2,2,2,2,1
-	   db 1,0,0,0,2,0,0,0,2,0,0,0,0,0,0,0,0,0,1
-	   db 1,0,2,2,2,0,2,2,2,2,2,2,2,2,0,0,2,0,1
-	   db 1,0,2,0,0,0,2,0,0,0,0,0,0,0,2,0,2,0,1
-	   db 1,0,2,2,2,2,2,0,0,2,2,2,2,0,2,2,2,0,1
-	   db 1,0,0,0,2,0,0,0,0,0,0,0,2,0,2,0,0,0,1
-	   db 1,2,2,0,2,0,2,2,2,2,2,0,2,0,2,0,2,0,1
-	   db 1,0,0,0,2,0,2,0,0,0,2,0,2,0,2,0,2,0,1
-	   db 1,2,2,0,2,0,0,0,2,0,2,0,2,0,2,0,2,0,1
-	   db 1,0,0,0,2,0,0,0,2,0,2,0,2,0,0,0,2,0,1
-	   db 1,0,2,2,2,2,2,2,2,0,2,2,2,2,2,2,2,2,1
-	   db 1,0,0,0,0,0,0,0,2,0,2,0,0,0,0,0,0,0,1
-	   db 1,2,2,2,2,0,2,0,2,0,2,0,2,2,2,2,2,0,1
-	   db 1,0,0,0,2,0,2,0,2,0,0,0,2,0,0,0,2,0,1
-	   db 1,0,2,2,2,0,2,0,2,2,2,2,2,0,2,0,2,0,1
-	   db 1,0,0,0,0,0,2,0,0,0,0,0,0,0,2,0,2,0,1
-	   db 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,1
+level2 db 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+	   db 1,0,6,0,0,0,0,0,3,0,0,0,0,0,1
+	   db 1,0,6,0,2,0,2,0,3,3,3,3,3,0,1
+	   db 1,0,0,0,2,0,2,0,3,0,0,0,0,0,1
+	   db 1,2,2,2,2,0,2,0,3,3,3,3,3,0,1
+	   db 1,0,0,0,2,0,2,0,3,0,0,0,0,0,1
+	   db 1,0,2,2,2,2,2,0,3,0,4,4,4,0,1
+	   db 1,0,2,0,0,0,2,0,3,0,4,0,0,0,1
+	   db 1,0,2,2,2,0,2,0,3,0,4,0,6,6,1
+	   db 1,0,0,0,0,0,2,0,3,0,4,0,0,0,1
+	   db 1,6,6,0,6,0,2,0,3,0,4,4,4,0,1
+	   db 1,0,6,0,6,0,0,0,0,0,0,0,4,0,1
+	   db 1,0,6,6,6,0,6,6,6,0,4,4,4,4,1
+	   db 1,0,0,0,0,0,0,0,6,0,0,0,0,0,5
+	   db 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 level2X dd 1.5 ; X of starting player position in level 2.
 level2Y dd 1.5 ; Y of starting player position in level 2.
 level2DirX dd 0.0 ; X of starting player direction in level 2.
 level2DirY dd 1.0 ; Y of starting player direction in level 2.
 level2PlaneX dd 0.66 ; X of starting camera plane in level 2.
 level2PlaneY dd 0.0 ; Y of starting camera plane in level 2.
-level2Width dw 19 ; Level 2 width (for calculating X and Y in 1D array).
+level2Width dw 15 ; Level 2 width (for calculating X and Y in 1D array).
+
+; Level 3 map.
+level3 db 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+	   db 1,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
+	   db 1,0,2,0,4,4,4,0,4,0,2,2,2,2,2,2,2,2,1
+	   db 1,0,0,0,4,0,0,0,4,0,0,0,0,0,0,0,0,0,1
+	   db 1,0,4,4,4,0,4,4,4,4,4,4,4,4,4,0,4,0,1
+	   db 1,0,4,0,0,0,4,0,0,0,0,0,0,0,4,0,4,0,1
+	   db 1,0,4,4,4,4,4,0,3,3,3,3,3,0,4,4,4,0,1
+	   db 1,0,0,0,4,0,0,0,0,0,0,0,3,0,4,0,0,0,1
+	   db 1,2,2,0,4,0,3,3,3,3,3,0,3,0,4,0,3,0,1
+	   db 1,0,0,0,4,0,3,0,0,0,3,0,3,0,4,0,3,0,1
+	   db 1,2,2,0,4,0,3,0,4,0,3,0,3,0,4,0,3,0,1
+	   db 1,0,0,0,4,0,0,0,4,0,3,0,3,0,0,0,3,0,1
+	   db 1,0,4,4,4,4,4,4,4,0,3,3,3,3,3,3,3,3,1
+	   db 1,0,0,0,0,0,0,0,4,0,3,0,0,0,0,0,0,0,1
+	   db 1,2,2,2,2,0,2,0,4,0,3,0,4,4,4,4,4,0,1
+	   db 1,0,0,0,2,0,2,0,4,0,0,0,4,0,0,0,4,0,1
+	   db 1,0,2,2,2,0,2,0,4,4,4,4,4,0,2,0,4,0,1
+	   db 1,0,0,0,0,0,2,0,0,0,0,0,0,0,2,0,4,0,1
+	   db 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,1
+level3X dd 1.5 ; X of starting player position in level 3.
+level3Y dd 1.5 ; Y of starting player position in level 3.
+level3DirX dd 0.0 ; X of starting player direction in level 3.
+level3DirY dd 1.0 ; Y of starting player direction in level 3.
+level3PlaneX dd 0.66 ; X of starting camera plane in level 3.
+level3PlaneY dd 0.0 ; Y of starting camera plane in level 3.
+level3Width dw 19 ; Level 3 width (for calculating X and Y in 1D array).
 
 currentLevel db 1 ; Current level number.
 currentWidth dw 0 ; The current level's width.
@@ -205,7 +227,9 @@ lineEnd dw 0 ; Pixel to stop drawing the line on (calculated based on line heigh
 lineColor db 0 ; Color of the line (based on the wall number and the side the ray hit it from).
 lineLooper dw 0 ; Variable used for looping one column of pixels.
 
-char db 0 ; What character was hit?
+char db 0 ; What character was pressed?
+
+exitGame db 0 ; If 1, exit the game. Made in order to not jump out of a function.
 
 CODESEG
 ; Enters graphic mode.
@@ -286,7 +310,7 @@ proc calculateRay
 endp calculateRay
 
 ; Stores rounded player position in mapX and mapY.
-proc floorPlayerPos
+proc roundPlayerPos
 	pusha
 	; Round playerX and store in mapX.
 	fld [playerX]
@@ -297,7 +321,7 @@ proc floorPlayerPos
 	fistp [mapY]
 	popa
 	ret
-endp floorPlayerPos
+endp roundPlayerPos
 
 ; Calculates distance on ray from one horizontal grid line to the next, then from one vertical grid line to the next (abs(1 / rayDir)).
 proc calculateGridDist
@@ -519,6 +543,8 @@ endp drawWall
 proc handleInput
 	pusha
 	; Jump to label based on the character pressed.
+	cmp [char], 'q'
+	je handleExit
 	cmp [char], 'w'
 	je forward
 	cmp [char], 's'
@@ -529,6 +555,11 @@ proc handleInput
 	je turnRight
 
 	jmp handleInputEnd ; If nothing was pressed, jump to end of procedure.
+
+	; If q was pressed, move 1 into exitGame.
+	handleExit:
+		mov [exitGame], 1
+		jmp handleInputEnd
 
 	; If there's no wall in front of the player, move forward.
 	forward:
@@ -760,34 +791,35 @@ proc handleInput
 
 		jmp handleInputEnd
 	
+	; Prepare for jumping to the next level.
 	nextLevel:
+		; Increase currentLevel and clear the screen.
 		inc [currentLevel]
 		call graphicMode
-		mov dh, 0
-		mov dl, 0
-		mov bh, 0
-		mov ah, 2
-		int 10h
 		
+		; If the currentLevel is greater than the number of levels, jump to youWin.
 		mov bl, [levelCount]
 		cmp [currentLevel], bl
 		jg youWin
 
+		; Draw the next level menu.
 		mov dx, offset nextLevelMenu
 		mov ah, 9h
 		int 21h
 
+		; Wait for character press, than load up the next level using initLevel.
 		call waitForChar
 		call initLevel
-		jmp handleInputEnd
+		jmp handleInputEnd ; After loading the next level, jump to then end of the procedure.
 		
+		; Draw the win menu, and wait for a character press, then exit the game.
 		youWin:
 			mov dx, offset winMenu
 			mov ah, 9h
 			int 21h
 			
 			call waitForChar
-			jmp endGame
+			mov [exitGame], 1
 
 	handleInputEnd:
 		popa
@@ -797,18 +829,23 @@ endp handleInput
 ; Pushes only the current level's constants to the stack and pops everything to the right variables.
 proc initLevel
 	pusha
+	; Go to the correct label based on currentLevel.
 	cmp [currentLevel], 1
 	je level1Init
-
 	cmp [currentLevel], 2
 	je level2Init
+	cmp [currentLevel], 3
+	je level3Init
 
 	jmp initLevelEnd
 
+	; Initialize level 1.
 	level1Init:
+		; Move the memory address of level1 into levelAddress.
 		lea bx, [level1]
 		mov [levelAddress], bx
 
+		; Push all of the level 1 constants to the stack.
 		push [level1X]
 		push [level1Y]
 		push [level1DirX]
@@ -817,12 +854,15 @@ proc initLevel
 		push [level1PlaneY]
 		push [level1Width]
 
-		jmp initLevelPop
+		jmp initLevelPop ; Jump to the popping phase.
 	
+	; Initialize level 2.
 	level2Init:
+		; Move the memory address of level2 into levelAddress.
 		lea bx, [level2]
 		mov [levelAddress], bx
 
+		; Push all of the level 2 constants to the stack.
 		push [level2X]
 		push [level2Y]
 		push [level2DirX]
@@ -831,8 +871,26 @@ proc initLevel
 		push [level2PlaneY]
 		push [level2Width]
 
-		jmp initLevelPop
+		jmp initLevelPop ; Jump to the popping phase.
 	
+	; Initialize level 3.
+	level3Init:
+		; Move the memory address of level3 into levelAddress.
+		lea bx, [level3]
+		mov [levelAddress], bx
+
+		; Push all of the level 3 constants to the stack.
+		push [level3X]
+		push [level3Y]
+		push [level3DirX]
+		push [level3DirY]
+		push [level3PlaneX]
+		push [level3PlaneY]
+		push [level3Width]
+
+		jmp initLevelPop ; Jump to the popping phase.
+	
+	; Pop all of the level constants into the corrent variables.
 	initLevelPop:
 		pop [currentWidth]
 		pop [planeY] 
@@ -852,34 +910,33 @@ start:
 	mov ax, @data
 	mov ds, ax
 
-call initFPU
-call graphicMode
+call initFPU ; Initiallize the FPU.
+call graphicMode ; Enter graphic mode.
 
-mov dh, 0
-mov dl, 0
-mov bh, 0
-mov ah, 2
-int 10h
-
+; Draw the main menu.
 mov dx, offset mainMenu
 mov ah, 9h
 int 21h
 
+; Wait for a character press, then initialize the first level.
 call waitForChar
-
 call initLevel
+
+; The main game loop.
 mainGameLoop:
-	mov [loopHelper], 0
+	mov [loopHelper], 0 ; Reset loopHelper.
+	; The raycast loop.
 	rayLoop:
-		call calculateCameraX
-		call calculateRay
-		call floorPlayerPos
-		call calculateGridDist
-		call calculateStep
-		; Perform the DDA algorithm.
-		mov [hit], 0
+		call calculateCameraX ; Calculate cameraX.
+		call calculateRay ; Calculate the current ray.
+		call roundPlayerPos ; Round the player's position.
+		call calculateGridDist ; Calculate the distances on the grid.
+		call calculateStep ; Calculate the direction the algorithm will step in.
+
+		mov [hit], 0 ; Reset hit.
+		; The DDA algorithm loop.
 		ddaLoop:
-			; Step in the correct direction.
+			; Compare sideDistX to sideDistY, if the distance to Y is smaller, jump to yDir.
 			fld [sideDistX]
 			fcom [sideDistY]
 			fstsw [floatHelper]
@@ -887,32 +944,37 @@ mainGameLoop:
 			sahf
 			jae yDir
 			
+			; Add the grid distance to the distance from the player.
 			fld [sideDistX]
 			fld [deltaDistX]
 			fadd
 			fstp [sideDistX]
 			
+			; Step in the X direction according to stepX.
 			mov ax, [mapX]
 			add ax, [stepX]
 			mov [mapX], ax
 			
-			mov [side], 0
-			jmp checkHit
+			mov [side], 0 ; Move 0 to side, indicating the last direction the ray went in was X.
+			jmp checkHit ; Once done, jump to checking if the ray hit a wall.
 			
 			yDir:
+				; Add the grid distance to the distance from the player.
 				fld [sideDistY]
 				fld [deltaDistY]
 				fadd
 				fstp [sideDistY]
 
+				; Step in the Y direction according to stepY.
 				mov ax, [mapY]
 				add ax, [stepY]
 				mov [mapY], ax
 
-				mov [side], 1
+				mov [side], 1 ; Move 0 to side, indicating the last direction the ray went in was Y.
 
 			; Check if ray has hit a wall.
 			checkHit:
+				; Get the number at index [mapX][mapY] in the current level's map array.
 				mov bx, [levelAddress]
 				mov ax, [mapY]
 				mul [currentWidth]
@@ -920,27 +982,32 @@ mainGameLoop:
 				add bx, ax
 				mov al, [bx]
 
+				; If the number is 0 or less, there's no wall, jump to the end of the loop.
 				cmp al, 0
 				jle ddaLoopEnd
 
-				mov [hit], 1
-
+				mov [hit], 1 ; Because the number was more than 0, move 1 into hit, indicating the ray has hit a wall.
+			
 			ddaLoopEnd:
+				; If the ray didn't hit the wall, loop.
 				cmp [hit], 0
 				je ddaLoop
 		
+		; Because the ray hit a wall, calculate the distance to the wall and draw it to the screen.
 		call calculateWallDist
 		call drawWall
 
+		; Increase loopHelper, and if it's less than the screen's width, loop.
 		inc [loopHelper]
 		cmp [loopHelper], 320
 		jl rayLoop
-	
-call waitForChar
-cmp [char], 'q'
+
+call waitForChar ; Get a character input.
+call handleInput ; Handle the input.
+
+cmp [exitGame], 1
 je endGame
 
-call handleInput
 jmp mainGameLoop
 
 endGame:

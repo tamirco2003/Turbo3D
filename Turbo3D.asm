@@ -6,6 +6,8 @@
 ; calculates the distance to the wall, and draws a column of pixels based on
 ; the distance to the wall, it's type, and the direction the ray hit it from.
 
+; CHECK IF YOU NEED TO SET THE CURSOR POSITION FOR DRAWING THE MENUS, COULD BRING LINE COUNT DOWN.
+
 IDEAL
 MODEL small
 STACK 100h
@@ -389,9 +391,11 @@ endp calculateStep
 ; Calculates distance from wall to camera plane (to avoid fisheye effect).
 proc calculateWallDist
 	pusha
+	; Check what on what side the ray hit the wall and jump accordingly.
 	cmp [side], 0
 	jne yDist
-
+	
+	; Because wall was hit on the X axis, use formula (mapX - playerX + (1 - stepX) / 2) / rayDirX to calculate distance.
 	fld1
 	fild [stepX]
 	fsub
@@ -406,8 +410,9 @@ proc calculateWallDist
 	fdiv
 	fstp [perpWallDist]
 
-	jmp distEnd
-
+	jmp distEnd ; Jump to end of procedure when done.
+	
+	; Because wall was hit on the Y axis, use formula (mapY - playerY + (1 - stepY) / 2) / rayDirY to calculate distance.
 	yDist:
 		fld1
 		fild [stepY]
@@ -433,13 +438,12 @@ endp calculateWallDist
 proc drawWall
 	pusha
 	; Calculate height of line based on distance.
-	mov [floatHelper], 200
-	fild [floatHelper]
+	fild [screenHeight]
 	fld [perpWallDist]
 	fdiv
 	fistp [lineHeight]
 
-	; Calculate highest and lowest points of the line.
+	; Calculate highest and lowest points of the line using the middle of the screen and the height of the line.
 	fldz
 	fild [lineHeight]
 	fsub
@@ -449,7 +453,8 @@ proc drawWall
 	fild [midOfScreen]
 	fadd
 	fistp [lineStart]
-
+	
+	; If lineStart is smaller than 0, clamp it to 0.
 	cmp [lineStart], 0
 	jge endCalc
 	mov [lineStart], 0
@@ -462,15 +467,16 @@ proc drawWall
 		fild [midOfScreen]
 		fadd
 		fistp [lineEnd]
-
+		
+		; If lineStart is larger or equal to 0, clamp it to 199.
 		cmp [lineEnd], 200
 		jl drawLine
-
 		mov [lineEnd], 200
 		dec [lineEnd]
 	
+	; Start of line drawing section.
 	drawLine:
-		; Get wall color.
+		; Get wall color from current map.
 		mov bx, [levelAddress]
 		mov ax, [mapY]
 		mul [currentWidth]
@@ -479,29 +485,32 @@ proc drawWall
 		mov al, [bx]
 		mov [lineColor], al
 		
+		; Loop over a single column of pixels, and draw according to lineStart and lineEnd.
 		mov [lineLooper], 0
 		drawLineLoop:
-			xor bh, bh
+			; Draw a pixel at X loopHelper and Y lineLooper.
 			mov cx, [loopHelper]
 			mov dx, [lineLooper]
 			mov al, 0
+			; If lineLooper is between lineStart and lineEnd, use the wall color.
 			cmp dx, [lineStart]
 			jl drawLineInt
 			cmp dx, [lineEnd]
 			jg drawLineInt
 			mov al, [lineColor]
+			; If the wall was hit on the Y axis, make the color darker (for better 3D effect).
 			cmp [side], 1
 			jne drawLineInt
 			add al, 8
 		
 		drawLineInt:
+			; Draw the pixel.
 			mov ah, 0ch
 			int 10h
 		inc [lineLooper]
 		mov ax, [lineLooper]
-		cmp ax, 200
-		jl drawLineLoop
-
+		cmp ax, [screenHeight]
+		jl drawLineLoop ; If lineLooper is smaller than screenHeight, loop.
 	popa
 	ret
 endp drawWall
@@ -509,6 +518,7 @@ endp drawWall
 ; Handles keyboard input, movement, and rotation.
 proc handleInput
 	pusha
+	; Jump to label based on the character pressed.
 	cmp [char], 'w'
 	je forward
 	cmp [char], 's'
@@ -518,10 +528,11 @@ proc handleInput
 	cmp [char], 'd'
 	je turnRight
 
-	jmp handleInputEnd
+	jmp handleInputEnd ; If nothing was pressed, jump to end of procedure.
 
 	; If there's no wall in front of the player, move forward.
 	forward:
+		; Calculate the next position of the player on the X axis, and store it in movWallCheckX.
 		fld [playerX]
 		fld [dirX]
 		fld [movSpeed]
@@ -532,16 +543,19 @@ proc handleInput
 		fld [playerY]
 		fistp [movWallCheckY]
 		
+		; Check what is in the movWallCheckX position.
 		mov bx, [levelAddress]
 		mov ax, [movWallCheckY]
 		mul [currentWidth]
 		add ax, [movWallCheckX]
 		add bx, ax
 		mov al, [bx]
-
+		
+		; If there's a pink wall in the movWallCheckX position, jump to nextLevel.
 		cmp al, 5
 		je nextLevel
-
+		
+		; If there's no wall in the movWallCheckX position, move to it.
 		cmp al, 0
 		jne forwardY
 
@@ -551,8 +565,9 @@ proc handleInput
 		fmul
 		fadd
 		fstp [playerX]
-
+		
 		forwardY:
+			; Calculate the next position of the player on the Y axis, and store it in movWallCheckY.
 			fld [playerY]
 			fld [dirY]
 			fld [movSpeed]
@@ -563,16 +578,19 @@ proc handleInput
 			fld [playerX]
 			fistp [movWallCheckX]
 			
+			; Check what is in the movWallCheckY position.
 			mov bx, [levelAddress]
 			mov ax, [movWallCheckY]
 			mul [currentWidth]
 			add ax, [movWallCheckX]
 			add bx, ax
 			mov al, [bx]
-
+			
+			; If there's a pink wall in the movWallCheckY position, jump to nextLevel.
 			cmp al, 5
 			je nextLevel
-
+			
+			; If there's no wall in the movWallCheckY position, move to it.
 			cmp al, 0
 			jne handleInputEnd
 
@@ -583,10 +601,11 @@ proc handleInput
 			fadd
 			fstp [playerY]
 
-		jmp handleInputEnd
+		jmp handleInputEnd ; Jump to end of procedure when done.
 	
-	; If there's no wall in front of the player, move forward.
+	; If there's no wall behind the player, move backwards.
 	back:
+		; Calculate the next position of the player on the X axis, and store it in movWallCheckX.
 		fld [playerX]
 		fld [dirX]
 		fld [movSpeed]
@@ -597,16 +616,19 @@ proc handleInput
 		fld [playerY]
 		fistp [movWallCheckY]
 		
+		; Check what is in the movWallCheckX position.
 		mov bx, [levelAddress]
 		mov ax, [movWallCheckY]
 		mul [currentWidth]
 		add ax, [movWallCheckX]
 		add bx, ax
 		mov al, [bx]
-
+		
+		; If there's a pink wall in the movWallCheckX position, jump to nextLevel.
 		cmp al, 5
 		je nextLevel
-
+		
+		; If there's no wall in the movWallCheckX position, move to it.
 		cmp al, 0
 		jne backY
 
@@ -618,6 +640,7 @@ proc handleInput
 		fstp [playerX]
 
 		backY:
+			; Calculate the next position of the player on the Y axis, and store it in movWallCheckY.
 			fld [playerY]
 			fld [dirY]
 			fld [movSpeed]
@@ -628,16 +651,19 @@ proc handleInput
 			fld [playerX]
 			fistp [movWallCheckX]
 			
+			; Check what is in the movWallCheckY position.
 			mov bx, [levelAddress]
 			mov ax, [movWallCheckY]
 			mul [currentWidth]
 			add ax, [movWallCheckX]
 			add bx, ax
 			mov al, [bx]
-
+			
+			; If there's a pink wall in the movWallCheckY position, jump to nextLevel.
 			cmp al, 5
 			je nextLevel
-
+			
+			; If there's no wall in the movWallCheckY position, move to it.
 			cmp al, 0
 			jne handleInputEnd
 
@@ -650,7 +676,7 @@ proc handleInput
 		
 		jmp handleInputEnd
 
-	; Rotate direction and camera plane vectors 1 degree.
+	; Rotate direction and camera plane vectors 3 degrees.
 	turnLeft:
 		fld [dirX]
 		fst [rotHelper]
@@ -692,7 +718,7 @@ proc handleInput
 
 		jmp handleInputEnd
 	
-	; Rotate direction and camera plane vectors -1 degrees.
+	; Rotate direction and camera plane vectors -3 degrees.
 	turnRight:
 		fld [dirX]
 		fst [rotHelper]

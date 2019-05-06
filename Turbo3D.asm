@@ -193,8 +193,8 @@ cameraX dd 0.0 ; X coordinate in camera plane (left = -1, middle = 0, right = 1)
 rayDirX dd 0.0 ; X of ray's direction.
 rayDirY dd 0.0 ; Y of ray's direction.
 
-mapX dw 0 ; X of player's position in the grid (rounded player position).
-mapY dw 0 ; Y of player's position in the grid (rounded player position).
+mapX dw 0 ; Current X of ray's position.
+mapY dw 0 ; Current Y of player's position.
 
 sideDistX dd 0.0 ; Distance on ray from player position to first horizontal grid line.
 sideDistY dd 0.0 ; Distance on ray from player position to first vertical grid line.
